@@ -1,15 +1,15 @@
 {
-  "versionCode": 6,
-  "versionName": "1.1.3",
+  "versionCode": 7,
+  "versionName": "1.1.4",
   "package": "com.ishaq.xtgai",
-  "sha256": "82228b9641e7e996f26ebba8cb8b56900fbf35571c3771343a6410995eff4922",
-  "size": 17148718,
+  "sha256": "69f0a62c2a228dbbe592533f8ddf78ee72d2c343bd5a8e89e57325589c04026b",
+  "size": 17150926,
   "cert": "707a836263f8e1804cfdef3adbae8a93e31ca01c1c11b874388d6e58670e9525",
-  "notes": "XTG AI v1.1.3: build apps right from chat (Install / Download / Telegram / Share), accurate answers with web sources, self-update, owner info.",
+  "notes": "XTG AI v1.1.4: build apps right from chat (Install / Download / Telegram / Share), more reliable app generation, accurate answers with web sources, self-update, owner info.",
   "urls": [
-    "https://github.com/abedinhardteam-alt/xtgai-releases/releases/download/v1.1.3/XTG-AI-v1.1.3.apk",
-    "https://raw.githubusercontent.com/abedinhardteam-alt/xtgai-releases/v1.1.3/apk/XTG-AI-v1.1.3.apk",
-    "https://cdn.jsdelivr.net/gh/abedinhardteam-alt/xtgai-releases@v1.1.3/apk/XTG-AI-v1.1.3.apk"
+    "https://github.com/abedinhardteam-alt/xtgai-releases/releases/download/v1.1.4/XTG-AI-v1.1.4.apk",
+    "https://raw.githubusercontent.com/abedinhardteam-alt/xtgai-releases/v1.1.4/apk/XTG-AI-v1.1.4.apk",
+    "https://cdn.jsdelivr.net/gh/abedinhardteam-alt/xtgai-releases@v1.1.4/apk/XTG-AI-v1.1.4.apk"
   ],
-  "publishedAt": "2026-10-31T14:15:25Z"
+  "publishedAt": "2026-10-31T15:03:04Z"
 }
