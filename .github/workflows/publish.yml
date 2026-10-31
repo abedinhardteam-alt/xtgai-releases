@@ -1,0 +1,54 @@
+name: publish
+# Publishes a signed XTG AI APK as an update record.
+# Input (pushed by the maintainer): incoming/part-NN (base64 chunks of the APK) + incoming/release.json
+# Output: release vX.Y.Z with the APK + update.json, apk/ copy for raw/jsDelivr mirrors, update.json at the repo root.
+on:
+  push:
+    branches: [main]
+    paths: ['incoming/release.json']
+  workflow_dispatch: {}
+permissions:
+  contents: write
+concurrency: { group: publish, cancel-in-progress: false }
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble, verify, publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          CERT: 707a836263f8e1804cfdef3adbae8a93e31ca01c1c11b874388d6e58670e9525
+          PKG: com.ishaq.xtgai
+        run: |
+          set -euo pipefail
+          R=incoming/release.json
+          vn=$(jq -r .versionName $R); vc=$(jq -r .versionCode $R); sha=$(jq -r .sha256 $R); notes=$(jq -r '.notes // ""' $R)
+          f="XTG-AI-v$vn.apk"
+          cat $(ls incoming/part-* | sort) | base64 -d > "$f"
+          echo "$sha  $f" | sha256sum -c -
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          cert=$("$BT/apksigner" verify --print-certs "$f" | grep -m1 'certificate SHA-256 digest' | awk '{print $NF}')
+          echo "cert=$cert"; [ "$cert" = "$CERT" ]
+          badging=$("$BT/aapt2" dump badging "$f" | head -1); echo "$badging"
+          echo "$badging" | grep -q "name='$PKG'"; echo "$badging" | grep -q "versionCode='$vc'"; echo "$badging" | grep -q "versionName='$vn'"
+          size=$(stat -c %s "$f")
+          mkdir -p apk releases; mv "$f" apk/
+          jq -n --argjson vc "$vc" --arg vn "$vn" --arg sha "$sha" --argjson size "$size" --arg cert "$CERT" --arg pkg "$PKG" --arg notes "$notes" \
+            --arg u1 "https://github.com/$REPO/releases/download/v$vn/$f" \
+            --arg u2 "https://raw.githubusercontent.com/$REPO/v$vn/apk/$f" \
+            --arg u3 "https://cdn.jsdelivr.net/gh/$REPO@v$vn/apk/$f" \
+            --arg at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '{versionCode:$vc, versionName:$vn, package:$pkg, sha256:$sha, size:$size, cert:$cert, notes:$notes, urls:[$u1,$u2,$u3], publishedAt:$at}' > update.json
+          cp update.json "releases/v$vn.json"; cat update.json
+          git config user.name "github-actions[bot]"; git config user.email "41898099+github-actions[bot]@users.noreply.github.com"
+          git rm -rq incoming
+          git add apk update.json releases
+          git commit -qm "Publish XTG AI v$vn (versionCode $vc)"
+          git tag "v$vn"
+          git push origin HEAD:main "v$vn"
+          gh release create "v$vn" "apk/$f" update.json --repo "$REPO" --title "XTG AI v$vn" --notes "$notes" --latest
+          # warm the CDN mirror
+          curl -fsS -o /dev/null "https://cdn.jsdelivr.net/gh/$REPO@v$vn/apk/$f" || echo "jsDelivr warm-up failed (will retry on first use)"
+          curl -fsS -o /dev/null "https://purge.jsdelivr.net/gh/$REPO@main/update.json" || true
